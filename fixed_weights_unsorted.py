@@ -3,7 +3,7 @@
 #
 # Author:   Sanya Srivastava
 #
-# This scripts does not sort the graph and assigns a weight between 0 - 1
+# This script does not sort the graph and assigns a weight between 0 - 1
 # to every edge before sorting.
 #
 
