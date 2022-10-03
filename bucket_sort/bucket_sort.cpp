@@ -24,27 +24,6 @@ using namespace std;
 int FLOAT_MIN = 0;
 int FLOAT_MAX = 1;
 // I think we can make the buckets global
-// void process_mem_usage(double& vm_usage, double& resident_set)
-// {
-//     vm_usage     = 0.0;
-//     resident_set = 0.0;
-//
-//     // the two fields we want
-//     unsigned long vsize;
-//     long rss;
-//     {
-//         std::string ignore;
-//         std::ifstream ifs("/proc/self/stat", std::ios_base::in);
-//         ifs >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
-//                 >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore >> ignore
-//                 >> ignore >> ignore >> vsize >> rss;
-//     }
-//
-//     long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024; // in case x86-64 is configured to use 2MB pages
-//     vm_usage = vsize / 1024.0;
-//     resident_set = rss * page_size_kb;
-// }
-
 
 void merge_bucket(int first, int second, int new_position, int &dynamic_bucket_size, float *bucket_cost, int *bucket_range, int *bucket_size_array) {
   vector <int> bu_range; // range
@@ -226,14 +205,10 @@ int main(int argc, char** argv) {
   string temp_string;
   while (getline(my_file, to_read)) {
     dup = strdup(to_read.c_str());
-    // cout << "dup = " << dup << endl;
     tok = strtok(dup, " ");
-    // cout << "toky " << tok << endl;
     edge_id = stoi(tok) - 1;  //edge_id = int(line[0]) - 1
     tok = strtok(NULL, " ");
     node_id = stoi(tok) - 1;  // node_id = int(line[1]) - 1
-    // cout <<" edge and node id formed" << endl;
-     // cout << edge_id << "  " << node_id << endl;
     temp_string = to_string(node_id) + "-" + to_string(edge_id) + "-";
     if (weight_dictionary.find(temp_string) == weight_dictionary.end()) {
       u = FLOAT_MIN + (float)(rand()) / ((float)(RAND_MAX/(FLOAT_MAX - FLOAT_MIN)));
@@ -274,12 +249,7 @@ int main(int argc, char** argv) {
   my_file.close();
 
   cout << "Graph read and variables populated: Success" << endl; // working till here - checked on Toucan
-  // process_mem_usage(vm, rss);
-  // cout << "VM: " << vm << "; RSS: " << rss << endl;
-  // deleting uneeded variables
   b_graph_set.clear();
-  // process_mem_usage(vm, rss);
-  // cout << "VM: " << vm << "; RSS: " << rss << endl;
 
   cout << "Bucketing process starting: Success" << endl;
   vector<int> *graph_bucket_list_nodes = new vector<int>[number_of_buckets];
@@ -308,8 +278,7 @@ int main(int argc, char** argv) {
     bucket_size[i] = graph_bucket_list_nodes[i].size();
     cout << to_string(i) << "  " << to_string(bucket_size[i]) << endl;
   }
-  // process_mem_usage(vm, rss);
-  // cout << "VM: " << vm << "; RSS: " << rss << endl;
+
 // 200 180 140 50 70 80 0
   int ideal = 6;
   if (to_do_flag == 0) {
@@ -463,17 +432,8 @@ int main(int argc, char** argv) {
   ofstream outfile1 ("index_array.txt");
   ofstream outfile2 ("neighbour_array.txt");
   ofstream outfile3 ("weights_array.txt");
-  // vector<int> index_array;
-  // vector< vector<int, float> neighbour_array;
   unordered_map <int, int> dic_translate;
   int k = 0;
-  // encrypting the nodes
-  // for(auto&i : graph_bucket_list_nodes) {
-  //   for (auto&j = i.begin(); j != i.end(); j++) {
-  //     dic_translate[j] = k
-  //     k += 1;
-  //   }
-  // }
   for(int x = 0; x < dynamic_bucket_size; x++) {
     for (int j = 0; j < graph_bucket_list_nodes[x].size(); j++) {
       dic_translate[graph_bucket_list_nodes[x][j]] = k;
@@ -495,20 +455,7 @@ int main(int argc, char** argv) {
     }
   }
   outfile1 << to_string(neighbour_array_size) << endl;
-  // for(auto&i : graph_bucket_list_nodes2) {
-  //   for (auto&j = i.begin(); j != i.end(); j++) { // in the vector
-  //     outfile1 << to_string(neighbour_array_size) << endl;
-  //     for (auto&k : dictionary_degree[j]) { // k are the neighbours of j
-  //       st = to_string(j) + "-" + to_string(k) + "-";
-  //       float to_insert = weight_dictionary[st];
-  //       outfile2 << to_string(dic_translate[k]) << endl;
-  //       outfile3 << to_string(to_insert) << endl;
-  //       neighbour_array_size += 1;
-  //     }
-  //   }
-  // }
-//./exec 0 out.orkut-links tep_for_orkut.txt
-// g++ -o exec bucket_sort.cpp
+
   outfile1.close();
   outfile2.close();
   outfile3.close();
