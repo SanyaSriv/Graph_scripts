@@ -115,6 +115,11 @@ int main(int argc, char** argv) {
   cout << "The flag given was:" << argv[1] << endl;
   cout << "The unweighted graph entered is: " << argv[2] << endl;
   cout << "File to extract bucket data is: " << argv[3] << endl;
+  cout << "Intermediate_representation: " << argv[4] << endl;
+  int intermediate_representation = 0; // we are processing the entire graph at once
+  if (argv[4] == 1) {
+    intermediate_representation = 1;
+  }
 
   int to_do_flag = stoi(argv[1]);
   fstream my_file;
@@ -436,12 +441,28 @@ int main(int argc, char** argv) {
       k += 1;
     }
   }
+
+  // for the intermediate_representation, we are just outputting the different nodes
+  // in the buckets
+  if (intermediate_representation == 1) {
+    ofstream outfile_i ("intermediate_representation.txt");
+    for (int i = 0; i < dynamic_bucket_size; i++) {
+      outfile_i << endl << to_string(i) << endl << endl;
+      for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
+        outfile_i << to_string(graph_bucket_list_nodes[i][j]) <<  endl;
+      }
+    }
+    outfile_i.close()
+    return 0;
+  }
+
   string st;
   int neighbour_array_size = 0;
   for (int i = 0; i < dynamic_bucket_size; i++) {
     for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
       outfile1 << to_string(neighbour_array_size) << endl;
       for (auto&k : dictionary_degree[graph_bucket_list_nodes[i][j]]) { // k are the neighbours of j
+        // TODO (SanyaSriv): The line below should be to_string(graph_bucket_list_nodes[i][j])
         st = to_string(j) + "-" + to_string(k) + "-";
         float to_insert = weight_dictionary[st];
         outfile2 << to_string(dic_translate[k]) << endl;
