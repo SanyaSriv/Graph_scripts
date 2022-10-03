@@ -111,38 +111,37 @@ int bucket_decider(int degree, int *lis_range, int number_of_buckets) {
 
 int main(int argc, char** argv) {
   srand(time(nullptr));
+
   cout << "The flag given was:" << argv[1] << endl;
   cout << "The unweighted graph entered is: " << argv[2] << endl;
   cout << "File to extract bucket data is: " << argv[3] << endl;
+
   int to_do_flag = stoi(argv[1]);
   fstream my_file;
   my_file.open(argv[3], ios::in); // opening the bucket data file
-  cout <<"File opened: Success" << endl;
+  cout << "File opened: Success" << endl;
   string to_read;
   getline(my_file, to_read); // read the number of buckets
   int number_of_buckets;
   cout << "to read is: " << to_read << endl;
   number_of_buckets = stoi(to_read);
-  cout << "crossed 37" << endl;
+
   int bucket_range[number_of_buckets + 1];
   float bucket_cost[number_of_buckets];
   string kernel_name[number_of_buckets];
   getline(my_file, to_read); // reading the empty line
-
   //storing the bucket ranges
   for(int i = 0; i < number_of_buckets + 1; i++) {
     getline(my_file, to_read);
     bucket_range[i] = stoi(to_read);
   }
   getline(my_file, to_read); // reading the empty line
-
   // now would be reading the cost of each bucket
   for(int i = 0; i < number_of_buckets; i++) {
     getline(my_file, to_read);
     bucket_cost[i] = stoi(to_read); // refers to cost of bucket i to i + 1
   }
   getline(my_file, to_read); // reading the empty line
-
   // now would be reading the kernel of each bucket
   for(int i = 0; i < number_of_buckets; i++) {
     getline(my_file, to_read);
@@ -150,7 +149,10 @@ int main(int argc, char** argv) {
     cout << "kernel_name = " << kernel_name[i] << endl;
   }
   my_file.close();
+
   cout << "Bucket variables initialised: Success" << endl;
+
+  // reading the main graph file
   my_file.open(argv[2]);
   getline(my_file, to_read);
   getline(my_file, to_read);
@@ -174,20 +176,16 @@ int main(int argc, char** argv) {
   ssize_t getline_lable;
 
   // getline_lable = getline(my_file, to_read);
-  // not we need encryption array
+  // now we need encryption array
   int *encrpytion_array = new int[number_of_nodes];
   cout << "array set up done" << endl;
   // dictionary_degree - this could be a map but then arrays occupy lesser
   // space so an array
   double vm, rss;
-  // process_mem_usage(vm, rss);
-  // cout << "VM: " << vm << "; RSS: " << rss << endl;
-  // vector<int> dictionary_degree[number_of_nodes];
   vector<int> *dictionary_degree = new vector<int>[number_of_nodes];
   int prev_node = 0;
   int on_node = 0;
-  // int *array{ new int[5]}; - sample
-  int *dictionary_for_sorting = new int[number_of_nodes] (); // initialisec to all zeros
+  int *dictionary_for_sorting = new int[number_of_nodes] (); // initialize to all zeros
 
   cout << "dict set up" << endl;
   // int *weight_dictionary{new float[number_of_nodes]};
@@ -195,7 +193,6 @@ int main(int argc, char** argv) {
   //int *b_graph{new int[number_of_nodes]}; // could be stored as a file
   cout << "map set up" << endl;
   ofstream outfile ("b_graph_file.txt");
-  // sample to how to write in the file - outfile << "my text here!" << std::endl;
   unordered_map<int, bool> b_graph_set;
   cout << "Graph variables initialised: Success" << endl;
   int node_id;
@@ -234,7 +231,6 @@ int main(int argc, char** argv) {
     dictionary_degree[node_id].push_back(edge_id);
     dictionary_for_sorting[node_id] += 1;
     prev_node = edge_id;
-    // getline_lable = getline(my_file, to_read);
   }
 
   // accounting for the lonely nodes
@@ -308,7 +304,7 @@ int main(int argc, char** argv) {
     }
     // merge by just the name
   } else if (to_do_flag == 2) {
-    // merge by both time and name
+    // TODO (SanyaSriv): merge by both time and name
 
   } else if (to_do_flag == 1) {
     // merge by time only
