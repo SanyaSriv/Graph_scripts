@@ -444,6 +444,7 @@ int main(int argc, char** argv) {
 
   // for the intermediate_representation, we are just outputting the different nodes
   // in the buckets
+  // TODO (SanyaSriv): Add another file that has all the neighbours of these nodes
   if (intermediate_representation == 1) {
     ofstream outfile_i ("intermediate_representation.txt");
     for (int i = 0; i < dynamic_bucket_size; i++) {
