@@ -4,23 +4,21 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <iostream>
 #include <string.h>
-#include <fstream>
-#include <iostream>
 #include <iterator>
 #include <unordered_map>
 #include <algorithm>
+#include <unistd.h>
+#include <string>
+#include <string_view>
 using namespace std;
+
 // global variables declared here
 // bucket delete -> modify -> could buckets be stored on disk?
 // codes -
 // 1 -> O E O
 // 2 -> E O O
 // 3 -> O O E
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
 int FLOAT_MIN = 0;
 int FLOAT_MAX = 1;
 // I think we can make the buckets global
@@ -111,58 +109,65 @@ int bucket_decider(int degree, int *lis_range, int number_of_buckets) {
 
 int main(int argc, char** argv) {
   srand(time(nullptr));
-
-  cout << "The flag given was:" << argv[1] << endl;
-  cout << "The unweighted graph entered is: " << argv[2] << endl;
-  cout << "File to extract bucket data is: " << argv[3] << endl;
-  cout << "Intermediate_representation: " << argv[4] << endl;
+  std::cout << "The flag given was:" << argv[1] << endl;
+  std::cout << "The unweighted graph entered is: " << argv[2] << endl;
+  std::cout << "File to extract bucket data is: " << argv[3] << endl;
+  std::cout << "Intermediate_representation: " << argv[4] << endl;
   int intermediate_representation = 0; // we are processing the entire graph at once
-  if (argv[4] == 1) {
+  if (int(argv[4]) == 1) {
     intermediate_representation = 1;
   }
 
   int to_do_flag = stoi(argv[1]);
   fstream my_file;
   my_file.open(argv[3], ios::in); // opening the bucket data file
-  cout << "File opened: Success" << endl;
+  std::cout << "File opened: Success" << endl;
   string to_read;
   getline(my_file, to_read); // read the number of buckets
   int number_of_buckets;
-  cout << "to read is: " << to_read << endl;
+  std::cout << "number of buckets are: " << to_read << endl;
   number_of_buckets = stoi(to_read);
 
+  // defining bucket arrays
   int bucket_range[number_of_buckets + 1];
   float bucket_cost[number_of_buckets];
   string kernel_name[number_of_buckets];
+
   getline(my_file, to_read); // reading the empty line
+
   //storing the bucket ranges
   for(int i = 0; i < number_of_buckets + 1; i++) {
     getline(my_file, to_read);
     bucket_range[i] = stoi(to_read);
   }
+
   getline(my_file, to_read); // reading the empty line
+
   // now would be reading the cost of each bucket
   for(int i = 0; i < number_of_buckets; i++) {
     getline(my_file, to_read);
     bucket_cost[i] = stoi(to_read); // refers to cost of bucket i to i + 1
   }
+
   getline(my_file, to_read); // reading the empty line
+
   // now would be reading the kernel of each bucket
   for(int i = 0; i < number_of_buckets; i++) {
     getline(my_file, to_read);
     kernel_name[i] = to_read; // refers to cost of bucket i to i + 1
-    cout << "kernel_name = " << kernel_name[i] << endl;
+    // cout << "kernel_name = " << kernel_name[i] << endl; // commenting out the debugging statement
   }
-  my_file.close();
 
-  cout << "Bucket variables initialised: Success" << endl;
+  my_file.close();
+  // bucket data read and bucket data file closed
+  std::cout << "Bucket variables initialised: Success" << endl;
 
   // reading the main graph file
   my_file.open(argv[2]);
   getline(my_file, to_read);
   getline(my_file, to_read);
   // now we would have to split to_read to get everything
-  cout << "crossed 60: " << to_read << endl;
+  std::cout << "tokenizing to read number of edges and nodes: " << to_read << endl;
   int number_of_edges, number_of_nodes;
   char *token;
   char *dup = strdup(to_read.c_str());
@@ -172,9 +177,9 @@ int main(int argc, char** argv) {
   token = strtok(NULL, " ");
   number_of_nodes = stoi(token);
 
-  cout << "Number of nodes = " << number_of_nodes << endl;
-  cout << "Number of edges = " << number_of_edges << endl;
-  cout <<"Number of nodes and edges initialised: Success" << endl;
+  std::cout << "Number of nodes = " << number_of_nodes << endl;
+  std::cout << "Number of edges = " << number_of_edges << endl;
+  std::cout <<"Number of nodes and edges initialised: Success" << endl;
   int insert = 0;
   int end = 0;
   bool insert_falg = false;
@@ -182,24 +187,24 @@ int main(int argc, char** argv) {
 
   // getline_lable = getline(my_file, to_read);
   // now we need encryption array
+
   int *encrpytion_array = new int[number_of_nodes];
-  cout << "array set up done" << endl;
-  // dictionary_degree - this could be a map but then arrays occupy lesser
-  // space so an array
-  double vm, rss;
   vector<int> *dictionary_degree = new vector<int>[number_of_nodes];
+  int *dictionary_for_sorting = new int[number_of_nodes] (); // initialize to all zeros
+  std::cout << "Array set up done" << endl;
+
   int prev_node = 0;
   int on_node = 0;
-  int *dictionary_for_sorting = new int[number_of_nodes] (); // initialize to all zeros
 
-  cout << "dict set up" << endl;
   // int *weight_dictionary{new float[number_of_nodes]};
   unordered_map<string, float> weight_dictionary;
   //int *b_graph{new int[number_of_nodes]}; // could be stored as a file
-  cout << "map set up" << endl;
+  std::cout << "map set up" << endl;
+
+  // to store the order of the graph
   ofstream outfile ("b_graph_file.txt");
   unordered_map<int, bool> b_graph_set;
-  cout << "Graph variables initialised: Success" << endl;
+  std::cout << "Graph variables initialised: Success" << endl;
   int node_id;
   int edge_id;
   char* tok;
@@ -217,6 +222,7 @@ int main(int argc, char** argv) {
       weight_dictionary[temp_string] = u;
     }
 
+    // might remove this if statement
     if (prev_node != edge_id) {
       while (edge_id > on_node) {
         if (dictionary_degree[on_node].size() == 0) {
@@ -249,10 +255,44 @@ int main(int argc, char** argv) {
   outfile.close();
   my_file.close();
 
-  cout << "Graph read and variables populated: Success" << endl; // working till here - checked on Toucan
+  std::cout << "Graph read and variables populated: Success" << endl; // working till here - checked on Toucan
   b_graph_set.clear();
 
-  cout << "Bucketing process starting: Success" << endl;
+  std::cout << "Bucketing process starting: Success" << endl;
+
+  // should print out an initial schedule here before starting
+  std::cout << "Printing out the initial schedule here -> " << endl;
+  // technically, we should be calling a function here but for now, I am writing the code in the main
+  for(int indi = 0; indi < 5; indi ++) {
+    std::cout << "----------";
+  }
+  std::cout << endl;
+  int mid_size = 25;
+  std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
+  
+  for(int i = 0; i < number_of_buckets; i++) {
+    for(int indi = 0; indi < 5; indi ++) {
+      std::cout << "----------";
+    }
+    string bucket = "Bucket" + to_string(i);
+    int temp_space_var = mid_size - bucket.length();
+    std::cout << bucket;
+    for(int indi = 0; indi < temp_space_var; indi ++) {
+      cout << " ";
+    }
+    cout << "|     ";
+    cout << kernel_name[i] << endl;
+    bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
+    int temp_space_var = mid_size - bucket.length();
+    std::cout << bucket;
+    for(int indi = 0; indi < temp_space_var; indi ++) {
+      cout << " ";
+    }
+    cout << "|     " <<  endl;
+  }
+
+  // code for printing out the buckets ends here
+
   vector<int> *graph_bucket_list_nodes = new vector<int>[number_of_buckets];
   int dynamic_bucket_size = number_of_buckets;
   int *bucket_size = new int[number_of_buckets]; // size of each bucket
@@ -261,32 +301,34 @@ int main(int argc, char** argv) {
   // now we would have to open the b_graph file for reading
   my_file.open("b_graph_file.txt");
   int num;
-  while(getline(my_file, to_read)) {
-    num = stoi(to_read);
-    if (num == 2826033) { // this is just for debugging purpose
-      cout << "deg = " << dictionary_for_sorting[num] << endl;
-      cout << "result = " << bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1;
-    } // int degree, int *lis_range, int number_of_buckets
-    graph_bucket_list_nodes[bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1].push_back(num);
-    //int degree, int lis_range[], int number_of_buckets
-  }
+  // while(getline(my_file, to_read)) {
+  //   num = stoi(to_read);
+  //   if (num == 2826033) { // this is just for debugging purpose
+  //     std::cout << "deg = " << dictionary_for_sorting[num] << endl;
+  //     std:cout << "result = " << bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1;
+  //   } // int degree, int *lis_range, int number_of_buckets
+  //   graph_bucket_list_nodes[bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1].push_back(num);
+  //   //int degree, int lis_range[], int number_of_buckets
+  // }
   my_file.close();
-  cout << "Buckets created + populated: Success." << endl;
-  cout << "Reduction Process beginning: Success." << endl;
-  cout <<"Current bucket size = " << dynamic_bucket_size << endl; // works till here - Success seen on Toucan
-  cout << "Number of nodes in buckets = " << endl;
-  for(int i = 0; i < number_of_buckets; i++) {
-    bucket_size[i] = graph_bucket_list_nodes[i].size();
-    cout << to_string(i) << "  " << to_string(bucket_size[i]) << endl;
-  }
+  std::cout << "Buckets created + populated: Success." << endl;
+  std::cout << "Reduction Process beginning: Success." << endl;
+  std::cout <<"Current bucket size = " << dynamic_bucket_size << endl; // works till here - Success seen on Toucan
+  // std::cout << "Number of nodes in buckets = " << endl;
+  // for(int i = 0; i < number_of_buckets; i++) {
+  //   bucket_size[i] = graph_bucket_list_nodes[i].size();
+  //   std::cout << to_string(i) << "  " << to_string(bucket_size[i]) << endl;
+  // }
 
 // 200 180 140 50 70 80 0
   int ideal = 6;
+  int ideal_for_name_merge = 1;
+  // going to focus on merging by name only
   if (to_do_flag == 0) {
-    while (dynamic_bucket_size > ideal) {
-      int change_made =0;
+    while (dynamic_bucket_size > ideal_for_name_merge) {
+      int change_made = 0;
       for(int i = 0; i < dynamic_bucket_size - 1; i++) {
-        cout << kernel_name[i] << " " << kernel_name[i + 1] << endl;
+        // std::cout << kernel_name[i] << " " << kernel_name[i + 1] << endl; -> debugging statement
         if (kernel_name[i] == kernel_name[i + 1]) {
           //merge_bucket(i, i + 1);
           // for now I am writing the algorithm here
@@ -303,9 +345,44 @@ int main(int argc, char** argv) {
           dynamic_bucket_size -=1;
         }
       }
+
+      std::cout << "Iteration completed" << endl;
+
       if (change_made == 0) {
         break;
       }
+
+      // if a change was made then we will print out the schedule
+      std::cout << "Printing out the initial schedule here -> " << endl;
+      // technically, we should be calling a function here but for now, I am writing the code in the main
+      for(int indi = 0; indi < 5; indi ++) {
+        std::cout << "----------";
+      }
+      std::cout << endl;
+      int mid_size = 25;
+      std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
+      
+      for(int i = 0; i < dynamic_bucket_size; i++) {
+        for(int indi = 0; indi < 5; indi ++) {
+          std::cout << "----------";
+        }
+        string bucket = "Bucket" + to_string(i);
+        int temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+        cout << kernel_name[i] << endl;
+        bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
+        int temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     " <<  endl;
+      }
+      // printing ends here
     }
     // merge by just the name
   } else if (to_do_flag == 2) {
@@ -318,7 +395,7 @@ int main(int argc, char** argv) {
       // initializing our variables for now
       int smallest = -1;
       int to_comp = number_of_nodes; // size of the smallest bucket
-      cout << dynamic_bucket_size << endl;
+      std::cout << dynamic_bucket_size << endl;
       // now we will compute the smallest bucket
       for (int i = 0; i < dynamic_bucket_size; i++) {
         int s = bucket_size[i];
@@ -382,7 +459,7 @@ int main(int argc, char** argv) {
           // int first, int second, int new_position, int *dynamic_bucket_size, int *bucket_cost, int *bucket_range, int *bucket_size_array
           // nothing got merged
           // flag the bucket so we do not get it again as the smallest bucket
-          cout << "did nothing" << endl;
+          std::cout << "did nothing" << endl;
           flagged_buckets.push_back(smallest);
         }
       } else if ((cost_prev_buck != -1.0) && (cost_after_buck == -1.0)) { // end bucket to be merged
@@ -391,7 +468,7 @@ int main(int argc, char** argv) {
         } else {
           // nothing got merged
           // flag the bucket so we do not get it again as the smallest bucket
-          cout << "did nothing" << endl;
+          std::cout << "did nothing" << endl;
           flagged_buckets.push_back(smallest);
 
         }
@@ -401,25 +478,25 @@ int main(int argc, char** argv) {
         } else {
           // nothing got merged
           // flag the bucket so we do not get it again as the smallest bucket
-          cout << "did nothing" << endl;
+          std::cout << "did nothing" << endl;
           flagged_buckets.push_back(smallest);
         }
       }
     }
   }
-  cout << "Bucket reduciton process is completed. Number of buckets now = " << dynamic_bucket_size << endl;
-  cout << "Bucket ranges now - " << endl;
-  for(int i = 0; i < dynamic_bucket_size + 1; i++) {
-    cout << to_string(bucket_range[i]) << endl;
-  }
 
-  // now we need to emoty graph_bucket_list_nodes
-  for(int i = 0; i < number_of_buckets; i ++) {
-    graph_bucket_list_nodes[i].clear();
-  }
-  // now we need to repopulate the graph_bucket_list_nodes
-  // vector<int> graph_bucket_list_nodes2[dynamic_bucket_size];
-  cout << "opening the b graph file" << endl;
+  std::cout << "Bucket reduciton process is completed. Number of buckets now = " << dynamic_bucket_size << endl;
+  // std::cout << "Bucket ranges now - " << endl;
+  // for(int i = 0; i < dynamic_bucket_size + 1; i++) {
+  //   std::cout << to_string(bucket_range[i]) << endl;
+  // }
+
+  // now we need to empty graph_bucket_list_nodes
+  // for(int i = 0; i < number_of_buckets; i ++) {
+  //   graph_bucket_list_nodes[i].clear();
+  // }
+  // now we need to populate the graph_bucket_list_nodes
+  std::cout << "opening the b graph file" << endl;
   my_file.open("b_graph_file.txt");
   while(getline(my_file, to_read)) {
     num = stoi(to_read);
@@ -429,6 +506,10 @@ int main(int argc, char** argv) {
   }
   my_file.close();
 
+  // have to check if it is working till here
+  // commenting out the python tail code for now - will check it later
+  // TODO (SanyaSriv): Check if this works 
+  /*
   // now we will create 2 files -
   ofstream outfile1 ("index_array.txt");
   ofstream outfile2 ("neighbour_array.txt");
@@ -453,7 +534,7 @@ int main(int argc, char** argv) {
         outfile_i << to_string(graph_bucket_list_nodes[i][j]) <<  endl;
       }
     }
-    outfile_i.close()
+    outfile_i.close();
     return 0;
   }
 
@@ -477,5 +558,6 @@ int main(int argc, char** argv) {
   outfile1.close();
   outfile2.close();
   outfile3.close();
+  */
   return 0;
 }
