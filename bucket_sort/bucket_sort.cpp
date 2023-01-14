@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
   std::cout << "File to extract bucket data is: " << argv[3] << endl;
   std::cout << "Intermediate_representation: " << argv[4] << endl;
   int intermediate_representation = 0; // we are processing the entire graph at once
-  if (int(argv[4]) == 1) {
+  if ((int)(size_t)argv[4] == 1) {
     intermediate_representation = 1;
   }
 
@@ -274,6 +274,7 @@ int main(int argc, char** argv) {
     for(int indi = 0; indi < 5; indi ++) {
       std::cout << "----------";
     }
+    std::cout << endl;
     string bucket = "Bucket" + to_string(i);
     int temp_space_var = mid_size - bucket.length();
     std::cout << bucket;
@@ -283,13 +284,14 @@ int main(int argc, char** argv) {
     cout << "|     ";
     cout << kernel_name[i] << endl;
     bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
-    int temp_space_var = mid_size - bucket.length();
+    temp_space_var = mid_size - bucket.length();
     std::cout << bucket;
     for(int indi = 0; indi < temp_space_var; indi ++) {
       cout << " ";
     }
     cout << "|     " <<  endl;
   }
+  cout << endl;
 
   // code for printing out the buckets ends here
 
@@ -353,7 +355,7 @@ int main(int argc, char** argv) {
       }
 
       // if a change was made then we will print out the schedule
-      std::cout << "Printing out the initial schedule here -> " << endl;
+      std::cout << "Printing out the schedule -> " << endl;
       // technically, we should be calling a function here but for now, I am writing the code in the main
       for(int indi = 0; indi < 5; indi ++) {
         std::cout << "----------";
@@ -366,6 +368,7 @@ int main(int argc, char** argv) {
         for(int indi = 0; indi < 5; indi ++) {
           std::cout << "----------";
         }
+        std::cout << endl;
         string bucket = "Bucket" + to_string(i);
         int temp_space_var = mid_size - bucket.length();
         std::cout << bucket;
@@ -375,13 +378,14 @@ int main(int argc, char** argv) {
         cout << "|     ";
         cout << kernel_name[i] << endl;
         bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
-        int temp_space_var = mid_size - bucket.length();
+        temp_space_var = mid_size - bucket.length();
         std::cout << bucket;
         for(int indi = 0; indi < temp_space_var; indi ++) {
           cout << " ";
         }
         cout << "|     " <<  endl;
       }
+      cout << endl;
       // printing ends here
     }
     // merge by just the name
