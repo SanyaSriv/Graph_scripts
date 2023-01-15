@@ -513,7 +513,7 @@ int main(int argc, char** argv) {
   // have to check if it is working till here
   // commenting out the python tail code for now - will check it later
   // TODO (SanyaSriv): Check if this works 
-  /*
+  
   // now we will create 2 files -
   ofstream outfile1 ("index_array.txt");
   ofstream outfile2 ("neighbour_array.txt");
@@ -530,17 +530,17 @@ int main(int argc, char** argv) {
   // for the intermediate_representation, we are just outputting the different nodes
   // in the buckets
   // TODO (SanyaSriv): Add another file that has all the neighbours of these nodes
-  if (intermediate_representation == 1) {
-    ofstream outfile_i ("intermediate_representation.txt");
-    for (int i = 0; i < dynamic_bucket_size; i++) {
-      outfile_i << endl << to_string(i) << endl << endl;
-      for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
-        outfile_i << to_string(graph_bucket_list_nodes[i][j]) <<  endl;
-      }
-    }
-    outfile_i.close();
-    return 0;
-  }
+  // if (intermediate_representation == 1) {
+  //   ofstream outfile_i ("intermediate_representation.txt");
+  //   for (int i = 0; i < dynamic_bucket_size; i++) {
+  //     outfile_i << endl << to_string(i) << endl << endl;
+  //     for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
+  //       outfile_i << to_string(graph_bucket_list_nodes[i][j]) <<  endl;
+  //     }
+  //   }
+  //   outfile_i.close();
+  //   return 0;
+  // }
 
   string st;
   int neighbour_array_size = 0;
@@ -562,6 +562,6 @@ int main(int argc, char** argv) {
   outfile1.close();
   outfile2.close();
   outfile3.close();
-  */
+  
   return 0;
 }
