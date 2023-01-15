@@ -9,6 +9,10 @@ MATCH_MILLIS = "        millis:"
 
 benchmark_file = open(sys.argv[-1], 'r');
 
+output_file_name = "benchmark_data.txt"
+
+output_file = open(output_file_name, "w")
+
 while True:
     line = benchmark_file.readline()
     # reached the end of file
@@ -28,6 +32,17 @@ while True:
                 meta_data[name_of_kernel].append(millis)
                 # print(millis)
 print(meta_data)
+output_file.write(str(len(meta_data)) + "\n")
+output_file.write(str(NUMBER_OF_SEGMENTS) + "\n")
+
+for i in meta_data:
+    output_file.write(i + "\n")
+    for j in meta_data[i]:
+        output_file.write(str(j) + "\n")
+
+output_file.close()
+benchmark_file.close()
+
 
         
 

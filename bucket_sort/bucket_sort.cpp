@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <string>
 #include <string_view>
+#include <map>
 using namespace std;
 
 // global variables declared here
@@ -107,12 +108,48 @@ int bucket_decider(int degree, int *lis_range, int number_of_buckets) {
    return 1;
 }
 
+map <string, vector <float> > benchmark_data_map;
+
 int main(int argc, char** argv) {
   srand(time(nullptr));
   std::cout << "The flag given was:" << argv[1] << endl;
   std::cout << "The unweighted graph entered is: " << argv[2] << endl;
   std::cout << "File to extract bucket data is: " << argv[3] << endl;
   std::cout << "Intermediate_representation: " << argv[4] << endl;
+
+  if (argc > 5) {
+    std::cout << "Benchmark_data_file: " << argv[5] << endl;
+    fstream benchmark_file;
+    benchmark_file.open(argv[5], ios::in);
+    string line_read;
+    getline(benchmark_file, line_read);
+    int number_of_kernels;
+    int number_of_segments;
+    number_of_kernels = stoi(line_read);
+    getline(benchmark_file, line_read);
+    number_of_segments = stoi(line_read);
+    for(int i = 0; i < number_of_kernels; i++) {
+      getline(benchmark_file, line_read);
+      string kernel = line_read;
+      vector<float> empty_vector;
+      benchmark_data_map[line_read] = empty_vector;
+      for(int j = 0; j < number_of_segments; j++) {
+        getline(benchmark_file, line_read);
+        benchmark_data_map[kernel].push_back(stof(line_read));
+      }
+    }
+
+    // testing if we are printing out the map correctly: 
+    // for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
+    //   cout << it->first << " : ";
+    //   for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+    //     cout << *it2 << " ";
+    //   }
+    //   cout << endl << endl;
+    // }
+    // Everything is getting stored correctly
+  }
+  
   int intermediate_representation = 0; // we are processing the entire graph at once
   if ((int)(size_t)argv[4] == 1) {
     intermediate_representation = 1;
