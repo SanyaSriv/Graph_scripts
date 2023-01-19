@@ -20,6 +20,11 @@ using namespace std;
 // 1 -> O E O
 // 2 -> E O O
 // 3 -> O O E
+
+// go through name merge
+// then choose minimum bucket
+// see if minimum bucket if merged with left neighbour can give us better results; similar with right
+
 int FLOAT_MIN = 0;
 int FLOAT_MAX = 1;
 // I think we can make the buckets global
@@ -300,15 +305,23 @@ int main(int argc, char** argv) {
   // should print out an initial schedule here before starting
   std::cout << "Printing out the initial schedule here -> " << endl;
   // technically, we should be calling a function here but for now, I am writing the code in the main
-  for(int indi = 0; indi < 5; indi ++) {
+  for(int indi = 0; indi < 6; indi ++) {
     std::cout << "----------";
   }
   std::cout << endl;
-  int mid_size = 25;
-  std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
+  int mid_size = 30;
+  string header_string = "Bucket name + range";
+  std::cout << "Bucket name + range";
+  int temp_space = mid_size - header_string.size();
+  for(int indi = 0; indi < temp_space; indi ++) {
+    cout << " ";
+  }
+  cout << "|";
+  std::cout << "     Kernel Name" << endl;
+  // std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
   
   for(int i = 0; i < number_of_buckets; i++) {
-    for(int indi = 0; indi < 5; indi ++) {
+    for(int indi = 0; indi < 6; indi ++) {
       std::cout << "----------";
     }
     std::cout << endl;
@@ -394,15 +407,23 @@ int main(int argc, char** argv) {
       // if a change was made then we will print out the schedule
       std::cout << "Printing out the schedule -> " << endl;
       // technically, we should be calling a function here but for now, I am writing the code in the main
-      for(int indi = 0; indi < 5; indi ++) {
+      for(int indi = 0; indi < 6; indi ++) {
         std::cout << "----------";
       }
       std::cout << endl;
-      int mid_size = 25;
-      std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
+      int mid_size = 30;
+      string header_string = "Bucket name + range";
+      std::cout << "Bucket name + range";
+      int temp_space = mid_size - header_string.size();
+      for(int indi = 0; indi < temp_space; indi ++) {
+        cout << " ";
+      }
+      cout << "|";
+      std::cout << "     Kernel Name" << endl;
+      // std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
       
       for(int i = 0; i < dynamic_bucket_size; i++) {
-        for(int indi = 0; indi < 5; indi ++) {
+        for(int indi = 0; indi < 6; indi ++) {
           std::cout << "----------";
         }
         std::cout << endl;
@@ -428,6 +449,99 @@ int main(int argc, char** argv) {
     // merge by just the name
   } else if (to_do_flag == 2) {
     // TODO (SanyaSriv): merge by both time and name
+
+    // merging by name first
+        while (dynamic_bucket_size > ideal_for_name_merge) {
+      int change_made = 0;
+      for(int i = 0; i < dynamic_bucket_size - 1; i++) {
+        // std::cout << kernel_name[i] << " " << kernel_name[i + 1] << endl; -> debugging statement
+        if (kernel_name[i] == kernel_name[i + 1]) {
+          //merge_bucket(i, i + 1);
+          // for now I am writing the algorithm here
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          // now we need to merge the array of vector
+          change_made = 1;
+          dynamic_bucket_size -=1;
+        }
+      }
+
+      std::cout << "Iteration completed" << endl;
+
+      if (change_made == 0) {
+        break;
+      }
+
+      // if a change was made then we will print out the schedule
+      std::cout << "Printing out the schedule -> " << endl;
+      // technically, we should be calling a function here but for now, I am writing the code in the main
+      for(int indi = 0; indi < 9; indi ++) {
+        std::cout << "----------";
+      }
+      std::cout << endl;
+      int mid_size = 30;
+      string header_string = "Bucket name + range";
+      std::cout << "Bucket name + range";
+      int temp_space = mid_size - header_string.size();
+      for(int indi = 0; indi < temp_space; indi ++) {
+        cout << " ";
+      }
+      cout << "|";
+      std::cout << "     Kernel Name";
+      header_string = "Kernel Name";
+      temp_space = mid_size - header_string.size();
+      for(int indi = 0; indi < temp_space; indi ++) {
+        cout << " ";
+      }
+      std::cout << "|      Bucket Cost" << endl;
+      
+      for(int i = 0; i < dynamic_bucket_size; i++) {
+        for(int indi = 0; indi < 9; indi ++) {
+          std::cout << "----------";
+        }
+        std::cout << endl;
+        string bucket = "Bucket" + to_string(i);
+        int temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+        cout << kernel_name[i];
+        temp_space_var = mid_size - kernel_name[i].size();
+         for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+        // putting the kernel cost in here
+        cout << bucket_cost[i] << endl;
+
+        bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
+        temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+      temp_space_var = mid_size - kernel_name[i].size();
+      for(int indi = 0; indi < mid_size; indi ++) {
+        cout << " ";
+      }
+      cout << "|     " << endl;
+
+      }
+      cout << endl;
+      // printing ends here
+    }
 
   } else if (to_do_flag == 1) {
     // merge by time only
