@@ -458,14 +458,23 @@ int main(int argc, char** argv) {
         if (kernel_name[i] == kernel_name[i + 1]) {
           //merge_bucket(i, i + 1);
           // for now I am writing the algorithm here
+          // merging the name
           for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
             kernel_name[j] = kernel_name[j +  1];
           }
+          // merging the range
           for(int j = i+1; j < dynamic_bucket_size; j++) {
             bucket_range[j] = bucket_range[j + 1];
           }
+          // merging the cost
+          bucket_cost[i] = bucket_cost[i] + bucket_cost[i + 1];
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
           bucket_range[dynamic_bucket_size] = -1;
           kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
           // now we need to merge the array of vector
           change_made = 1;
           dynamic_bucket_size -=1;
