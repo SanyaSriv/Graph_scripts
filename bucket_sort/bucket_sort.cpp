@@ -565,6 +565,7 @@ int main(int argc, char** argv) {
 
     // will be checking every pair
     for(int i = 0; i < dynamic_bucket_size - 1; i++) {
+      cout << "Entering the merging here" << endl;
       // comparing (i) and (i + 1)
       float buck1_cost = bucket_cost[i];
       float buck2_cost = bucket_cost[i + 1];
@@ -592,15 +593,15 @@ int main(int argc, char** argv) {
       }
       float buck1_with_kernel2_cost = 0;
       float buck2_with_kernel1_cost = 0;
-
+      cout << "Entering the merging here 2" << endl;
       for(int j = 0; j < buck1_array.size(); j++) {
+        cout << "value of j is: " << j << endl;
         buck1_with_kernel2_cost += benchmark_data_map[kernel2][j];
       }
 
       for(int j = 0; j < buck2_array.size(); j++) {
         buck2_with_kernel1_cost += benchmark_data_map[kernel1][j];
       }
-
       float something = 1; // just a placeholder
       float kernel1_merge_cost = buck1_cost + buck2_with_kernel1_cost;
       float kernel2_merge_cost = buck2_cost + buck1_with_kernel2_cost;
@@ -688,6 +689,69 @@ int main(int argc, char** argv) {
           // now we need to merge the array of vector
           dynamic_bucket_size -=1;
       }
+
+      std::cout << "Printing out the schedule -> " << endl;
+      // technically, we should be calling a function here but for now, I am writing the code in the main
+      for(int indi = 0; indi < 9; indi ++) {
+        std::cout << "----------";
+      }
+      std::cout << endl;
+      int mid_size = 30;
+      string header_string = "Bucket name + range";
+      std::cout << "Bucket name + range";
+      int temp_space = mid_size - header_string.size();
+      for(int indi = 0; indi < temp_space; indi ++) {
+        cout << " ";
+      }
+      cout << "|";
+      std::cout << "     Kernel Name";
+      header_string = "Kernel Name";
+      temp_space = mid_size - header_string.size();
+      for(int indi = 0; indi < temp_space; indi ++) {
+        cout << " ";
+      }
+      std::cout << "|      Bucket Cost" << endl;
+      
+      for(int i = 0; i < dynamic_bucket_size; i++) {
+        for(int indi = 0; indi < 9; indi ++) {
+          std::cout << "----------";
+        }
+        std::cout << endl;
+        string bucket = "Bucket" + to_string(i);
+        int temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+        cout << kernel_name[i];
+        temp_space_var = mid_size - kernel_name[i].size();
+         for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+        // putting the kernel cost in here
+        cout << bucket_cost[i] << endl;
+
+        bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
+        temp_space_var = mid_size - bucket.length();
+        std::cout << bucket;
+        for(int indi = 0; indi < temp_space_var; indi ++) {
+          cout << " ";
+        }
+        cout << "|     ";
+
+      temp_space_var = mid_size - kernel_name[i].size();
+      for(int indi = 0; indi < mid_size; indi ++) {
+        cout << " ";
+      }
+      cout << "|     " << endl;
+
+      }
+      cout << endl;
+
     }
 
   } else if (to_do_flag == 1) {
