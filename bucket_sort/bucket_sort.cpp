@@ -145,13 +145,13 @@ int main(int argc, char** argv) {
     }
 
     // testing if we are printing out the map correctly: 
-    // for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
-    //   cout << it->first << " : ";
-    //   for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-    //     cout << *it2 << " ";
-    //   }
-    //   cout << endl << endl;
-    // }
+    for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
+      cout << it->first << " : ";
+      for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+        cout << *it2 << " ";
+      }
+      cout << endl << endl;
+    }
     // Everything is getting stored correctly
   }
   
@@ -172,6 +172,7 @@ int main(int argc, char** argv) {
 
   // defining bucket arrays
   int bucket_range[number_of_buckets + 1];
+  int bucket_range_copy[number_of_buckets + 1];
   float bucket_cost[number_of_buckets];
   string kernel_name[number_of_buckets];
 
@@ -181,6 +182,7 @@ int main(int argc, char** argv) {
   for(int i = 0; i < number_of_buckets + 1; i++) {
     getline(my_file, to_read);
     bucket_range[i] = stoi(to_read);
+    bucket_range_copy[i] = stoi(to_read);
   }
 
   getline(my_file, to_read); // reading the empty line
@@ -390,8 +392,14 @@ int main(int argc, char** argv) {
           for(int j = i+1; j < dynamic_bucket_size; j++) {
             bucket_range[j] = bucket_range[j + 1];
           }
+          bucket_cost[i] = bucket_cost[i] + bucket_cost[i + 1];
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
           bucket_range[dynamic_bucket_size] = -1;
           kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
           // now we need to merge the array of vector
           change_made = 1;
           dynamic_bucket_size -=1;
@@ -550,6 +558,136 @@ int main(int argc, char** argv) {
       }
       cout << endl;
       // printing ends here
+    }
+
+    // now start merging by the bucket cost and benchmark data
+    // idea: cost after merge < cost of bucket 1 + cost of bucket 2 for either kernel1 or kernel2 
+
+    // will be checking every pair
+    for(int i = 0; i < dynamic_bucket_size - 1; i++) {
+      // comparing (i) and (i + 1)
+      float buck1_cost = bucket_cost[i];
+      float buck2_cost = bucket_cost[i + 1];
+      float combined_cost = buck1_cost + buck2_cost;
+
+      int buck1_high = bucket_range[i];
+      int buck1_low = bucket_range[i + 1];
+
+      int buck2_high = bucket_range[i + 1];
+      int buck2_low = bucket_range[i + 2];
+
+      vector <int> buck1_array;
+      vector <int> buck2_array;
+
+      string kernel1 = kernel_name[i];
+      string kernel2 = kernel_name[i + 1];
+
+      for(int j = 0; j < number_of_buckets - 1; j++ ) {
+        if ((bucket_range_copy[j] <= buck1_high) && (bucket_range_copy[j] >= buck1_low)) {
+          buck1_array.push_back(j);
+        }
+        if ((bucket_range_copy[j] <= buck2_high) && (bucket_range_copy[j] >= buck2_low)) {
+          buck2_array.push_back(j);
+        }
+      }
+      float buck1_with_kernel2_cost = 0;
+      float buck2_with_kernel1_cost = 0;
+
+      for(int j = 0; j < buck1_array.size(); j++) {
+        buck1_with_kernel2_cost += benchmark_data_map[kernel2][j];
+      }
+
+      for(int j = 0; j < buck2_array.size(); j++) {
+        buck2_with_kernel1_cost += benchmark_data_map[kernel1][j];
+      }
+
+      float something = 1; // just a placeholder
+      float kernel1_merge_cost = buck1_cost + buck2_with_kernel1_cost;
+      float kernel2_merge_cost = buck2_cost + buck1_with_kernel2_cost;
+
+      if ((combined_cost < kernel1_merge_cost) && (combined_cost < kernel2_merge_cost)) {
+        if ((kernel1_merge_cost - combined_cost) <= (kernel2_merge_cost - combined_cost)) {
+          kernel_name[i] = kernel1;
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          // merging the range
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          // merging the cost
+          bucket_cost[i] = kernel1_merge_cost;
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
+          // now we need to merge the array of vector
+          dynamic_bucket_size -=1;
+        } else {
+          kernel_name[i] = kernel2;
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          // merging the range
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          // merging the cost
+          bucket_cost[i] = kernel2_merge_cost;
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
+          // now we need to merge the array of vector
+          dynamic_bucket_size -=1;
+        }
+      } else if (combined_cost < kernel1_merge_cost) {
+        kernel_name[i] = kernel1;
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          // merging the range
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          // merging the cost
+          bucket_cost[i] = kernel1_merge_cost;
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
+          // now we need to merge the array of vector
+          dynamic_bucket_size -=1;
+      } else if (combined_cost < kernel2_merge_cost) {
+        kernel_name[i] = kernel2;
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          // merging the range
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          // merging the cost
+          bucket_cost[i] = kernel2_merge_cost;
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
+          // now we need to merge the array of vector
+          dynamic_bucket_size -=1;
+      }
     }
 
   } else if (to_do_flag == 1) {
