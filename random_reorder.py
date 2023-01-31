@@ -103,7 +103,7 @@ for i in range(0, len(encryption_array)):
     for j in dictionary_degree[encryption_array[i, 0]]:
         new_neighbour_array[neigh_start, 0] = dic_encrypt[j]
         s = str(j) + "_" + str(encryption_array[i][0])
-        new_neighbour_array[neigh_start, 0] = dic_weights[s]
+        new_neighbour_array[neigh_start, 1] = dic_weights[s]
         neigh_start += 1
 
 new_index_array[count] = neigh_start
