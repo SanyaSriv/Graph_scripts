@@ -112,8 +112,8 @@ if (debug == 1):
     print(dic_encrypt)
     print(dic_encrypt_reverse)
 
-new_neighbour_array = np.zeros(shape = (number_of_edges, 2),dtype=np.int32)
-new_index_array = np.zeros(shape = (number_of_nodes + 1, 1),dtype=np.int32)
+new_neighbour_array = np.zeros(shape = (number_of_edges, 2),dtype=np.int64)
+new_index_array = np.zeros(shape = (number_of_nodes + 1, 1),dtype=np.int64)
 
 count = 0
 neigh_start = 0
