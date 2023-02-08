@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
         benchmark_data_map[kernel].push_back(stof(line_read));
       }
     }
-
+  
     // testing if we are printing out the map correctly: 
     for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
       cout << it->first << " : ";
@@ -89,6 +89,10 @@ int main(int argc, char** argv) {
     }
     // Everything is getting stored correctly
   }
+
+  int number_of_edges, number_of_nodes;
+  number_of_nodes = int(argv[6]);
+  number_of_edges = int(argv[7]);
   
   int intermediate_representation = 0; // we are processing the entire graph at once
   if ((int)(size_t)argv[4] == 1) {
@@ -143,19 +147,8 @@ int main(int argc, char** argv) {
 
   // reading the main graph file
   my_file.open(argv[2]);
-  getline(my_file, to_read);
-  getline(my_file, to_read);
-  // now we would have to split to_read to get everything
-  std::cout << "tokenizing to read number of edges and nodes: " << to_read << endl;
-  // do nottokenize, instead, take it as a command line argument
-  int number_of_edges, number_of_nodes;
   char *token;
-  char *dup = strdup(to_read.c_str());
-  token = strtok(dup, " ");
-  token = strtok(NULL, " ");
-  number_of_edges = stoi(token);
-  token = strtok(NULL, " ");
-  number_of_nodes = stoi(token);
+  char *dup;
 
   std::cout << "Number of nodes = " << number_of_nodes << endl;
   std::cout << "Number of edges = " << number_of_edges << endl;
@@ -165,11 +158,8 @@ int main(int argc, char** argv) {
   bool insert_falg = false;
   ssize_t getline_lable;
 
-  // getline_lable = getline(my_file, to_read);
-  // now we need encryption array
-
   int *encrpytion_array = new int[number_of_nodes];
-  vector<int> *dictionary_degree = new vector<int>[number_of_nodes];
+  vector<int> *dictionary_degree = new vector<int>[number_of_nodes]; // array of vectors
   int *dictionary_for_sorting = new int[number_of_nodes] (); // initialize to all zeros
   std::cout << "Array set up done" << endl;
 
@@ -191,21 +181,9 @@ int main(int argc, char** argv) {
   while (getline(my_file, to_read)) {
     dup = strdup(to_read.c_str());
     tok = strtok(dup, " ");
-    edge_id = stoi(tok) - 1;  //edge_id = int(line[0]) - 1
+    edge_id = stoi(tok);  //edge_id = int(line[0]) - because Gorder nodes start from 0
     tok = strtok(NULL, " ");
-    node_id = stoi(tok) - 1;  // node_id = int(line[1]) - 1
-
-    // might remove this if statement
-    if (prev_node != edge_id) {
-      while (edge_id > on_node) {
-        if (dictionary_degree[on_node].size() == 0) {
-        }
-        on_node += 1;
-        if (on_node == edge_id) {
-          break;
-        }
-      }
-    }
+    node_id = stoi(tok);  // node_id = int(line[1]) - because Gorder nodes start from 0
 
     if (b_graph_set.find(node_id) == b_graph_set.end()) {
       b_graph_set[node_id] = true;
@@ -214,7 +192,6 @@ int main(int argc, char** argv) {
 
     dictionary_degree[node_id].push_back(edge_id);
     dictionary_for_sorting[node_id] += 1;
-    prev_node = edge_id;
   }
 
   // accounting for the lonely nodes
