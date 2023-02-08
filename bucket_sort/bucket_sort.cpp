@@ -64,38 +64,6 @@ void merge_bucket(int first, int second, int new_position, int &dynamic_bucket_s
   }
 }
 
-void deleting_empty_bucket(int bucket_to_del, vector<string> &kernel_name, float* cost, int number_of_buckets, vector<int> *bucket_array, int *range) { // INCOMPLETE
-  if (bucket_to_del == 0) { // if we need to delete the first bucket, then
-    int marker = range[0];
-    for(int i = 1; i < number_of_buckets; i++) {
-      cost[i-1] = cost[i];
-      kernel_name[i - 1] = kernel_name[i];
-      bucket_array[i - 1] = bucket_array[i];
-    }
-    for(int i = 1; i < number_of_buckets + 1; i++) {
-      range[i - 1] = range[i];
-    }
-    cost[number_of_buckets - 1] = -1; // saying that value is no longer valid
-    kernel_name[number_of_buckets - 1].clear();
-    bucket_array[number_of_buckets - 1].clear();
-    range[0] = marker;
-    range[number_of_buckets] = -1;
-  } else if (bucket_to_del == number_of_buckets - 1) { // end bucket to be deleted
-    // deleting the last element in the number of buckets and stuff
-    int marker = range[number_of_buckets];
-    cost[number_of_buckets - 1] = -1;
-    kernel_name[number_of_buckets - 1].clear();
-    bucket_array[number_of_buckets - 1].clear();
-    range[number_of_buckets - 1] = marker;
-    range[number_of_buckets] = -1;
-  } else { // it comes in between
-    // delete the value from the kernel name corresponding to the bucket
-    // delete the value from the cost bucket
-    // shift the ranges
-
-
-  }
-}
 // number_of_buckets should be the length of lis_range
 // 256 34 20 1 0 - 4, 5
 // number of buckets = 4
@@ -212,6 +180,7 @@ int main(int argc, char** argv) {
   getline(my_file, to_read);
   // now we would have to split to_read to get everything
   std::cout << "tokenizing to read number of edges and nodes: " << to_read << endl;
+  // do nottokenize, instead, take it as a command line argument
   int number_of_edges, number_of_nodes;
   char *token;
   char *dup = strdup(to_read.c_str());
@@ -240,8 +209,6 @@ int main(int argc, char** argv) {
   int prev_node = 0;
   int on_node = 0;
 
-  // int *weight_dictionary{new float[number_of_nodes]};
-  unordered_map<string, float> weight_dictionary;
   //int *b_graph{new int[number_of_nodes]}; // could be stored as a file
   std::cout << "map set up" << endl;
 
@@ -260,11 +227,6 @@ int main(int argc, char** argv) {
     edge_id = stoi(tok) - 1;  //edge_id = int(line[0]) - 1
     tok = strtok(NULL, " ");
     node_id = stoi(tok) - 1;  // node_id = int(line[1]) - 1
-    temp_string = to_string(node_id) + "-" + to_string(edge_id) + "-";
-    if (weight_dictionary.find(temp_string) == weight_dictionary.end()) {
-      u = FLOAT_MIN + (float)(rand()) / ((float)(RAND_MAX/(FLOAT_MAX - FLOAT_MIN)));
-      weight_dictionary[temp_string] = u;
-    }
 
     // might remove this if statement
     if (prev_node != edge_id) {
@@ -852,23 +814,12 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "Bucket reduciton process is completed. Number of buckets now = " << dynamic_bucket_size << endl;
-  // std::cout << "Bucket ranges now - " << endl;
-  // for(int i = 0; i < dynamic_bucket_size + 1; i++) {
-  //   std::cout << to_string(bucket_range[i]) << endl;
-  // }
 
-  // now we need to empty graph_bucket_list_nodes
-  // for(int i = 0; i < number_of_buckets; i ++) {
-  //   graph_bucket_list_nodes[i].clear();
-  // }
-  // now we need to populate the graph_bucket_list_nodes
   std::cout << "opening the b graph file" << endl;
   my_file.open("b_graph_file.txt");
   while(getline(my_file, to_read)) {
     num = stoi(to_read);
-    // int degree, int *lis_range, int number_of_buckets
     graph_bucket_list_nodes[bucket_decider(dictionary_for_sorting[num], bucket_range, dynamic_bucket_size + 1) - 1].push_back(num);
-    //int degree, int lis_range[], int number_of_buckets
   }
   my_file.close();
 
@@ -877,53 +828,67 @@ int main(int argc, char** argv) {
   // TODO (SanyaSriv): Check if this works 
   
   // now we will create 2 files -
+  ofstream outfile0 ("header.txt"); // will contain number_of_nodes, and number_of_edges
   ofstream outfile1 ("index_array.txt");
   ofstream outfile2 ("neighbour_array.txt");
   ofstream outfile3 ("weights_array.txt");
   unordered_map <int, int> dic_translate;
+  unordered_map <int, int> dic_translate_reverse;
+  // we are renumbering the nodes so node 0 is at the beginning
   int k = 0;
   for(int x = 0; x < dynamic_bucket_size; x++) {
     for (int j = 0; j < graph_bucket_list_nodes[x].size(); j++) {
       dic_translate[graph_bucket_list_nodes[x][j]] = k;
+      dic_translate_reverse[k] = graph_bucket_list_nodes[x][j];
       k += 1;
     }
   }
 
-  // for the intermediate_representation, we are just outputting the different nodes
-  // in the buckets
-  // TODO (SanyaSriv): Add another file that has all the neighbours of these nodes
-  // if (intermediate_representation == 1) {
-  //   ofstream outfile_i ("intermediate_representation.txt");
-  //   for (int i = 0; i < dynamic_bucket_size; i++) {
-  //     outfile_i << endl << to_string(i) << endl << endl;
-  //     for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
-  //       outfile_i << to_string(graph_bucket_list_nodes[i][j]) <<  endl;
-  //     }
-  //   }
-  //   outfile_i.close();
-  //   return 0;
-  // }
+// filling in the header.txt file
+outfile0 << number_of_nodes << endl;
+outfile0 << number_of_edges << endl;
 
-  string st;
-  int neighbour_array_size = 0;
-  for (int i = 0; i < dynamic_bucket_size; i++) {
-    for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
-      outfile1 << to_string(neighbour_array_size) << endl;
-      for (auto&k : dictionary_degree[graph_bucket_list_nodes[i][j]]) { // k are the neighbours of j
-        // TODO (SanyaSriv): The line below should be to_string(graph_bucket_list_nodes[i][j])
-        st = to_string(j) + "-" + to_string(k) + "-";
-        float to_insert = weight_dictionary[st];
-        outfile2 << to_string(dic_translate[k]) << endl;
-        outfile3 << to_string(to_insert) << endl;
-        neighbour_array_size += 1;
-      }
-    }
+int neigh_start = 0;
+int count = 0;
+
+for (int i = 0; i < number_of_nodes; i++) {
+  outfile1 << neigh_start << endl;
+  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
+    neigh_start += 1;
   }
-  outfile1 << to_string(neighbour_array_size) << endl;
+}
+outfile1 << neigh_start << endl;
 
+for (int i = 0; i < number_of_nodes; i++) {
+  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
+    outfile2 << dic_translate[dictionary_degree[dic_translate_reverse[i]][j]] << endl;
+    float weight = FLOAT_MIN + (float)(rand()) / ((float)(RAND_MAX/(FLOAT_MAX - FLOAT_MIN)));
+    outfile3 << weight << endl;
+  }
+}
   outfile1.close();
   outfile2.close();
   outfile3.close();
   
   return 0;
 }
+
+// old method below: 
+
+  // string st;
+  // int neighbour_array_size = 0;
+  // for (int i = 0; i < dynamic_bucket_size; i++) {
+  //   for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
+  //     outfile1 << to_string(neighbour_array_size) << endl;
+  //     for (auto&k : dictionary_degree[graph_bucket_list_nodes[i][j]]) { // k are the neighbours of j
+  //       // TODO (SanyaSriv): The line below should be to_string(graph_bucket_list_nodes[i][j])
+  //       st = to_string(j) + "-" + to_string(k) + "-";
+  //       float to_insert = weight_dictionary[st];
+  //       outfile2 << to_string(dic_translate[k]) << endl;
+  //       outfile3 << to_string(to_insert) << endl;
+  //       neighbour_array_size += 1;
+  //     }
+  //   }
+  // }
+  // outfile1 << to_string(neighbour_array_size) << endl;
+
