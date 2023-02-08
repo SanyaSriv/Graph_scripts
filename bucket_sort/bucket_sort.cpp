@@ -14,6 +14,8 @@
 #include <map>
 using namespace std;
 
+// we can assume that it will use the Gorder file only 
+// so the minimum node = 0 and not 1
 // global variables declared here
 // bucket delete -> modify -> could buckets be stored on disk?
 // codes -
@@ -28,41 +30,6 @@ using namespace std;
 int FLOAT_MIN = 0;
 int FLOAT_MAX = 1;
 // I think we can make the buckets global
-
-void merge_bucket(int first, int second, int new_position, int &dynamic_bucket_size, float *bucket_cost, int *bucket_range, int *bucket_size_array) {
-  vector <int> bu_range; // range
-  int left, right;
-  float final_cost = 0;
-  int final_size = 0;
-  int to_div;
-  left = first;
-  right = second + 1;
-  for (int i = first; i <= second; i ++ ) {
-    final_cost += bucket_cost[i];
-    final_size += bucket_size_array[i];
-    dynamic_bucket_size -= 1;
-    to_div += 1;
-  }
-  dynamic_bucket_size += 1;
-  final_cost += final_cost / to_div;
-  // now we just need to replace
-  for (int i = 0; i < dynamic_bucket_size + 1; i++) {
-    if (i <= left || i >= right) {
-      bu_range.push_back(bucket_range[i]);
-    }
-  }
-  for (int i = 0; i < dynamic_bucket_size + 1; i ++) {
-    bucket_range[i] = bu_range[i];
-  }
-  // bucket range has been handled
-  // now going to handle cost array and bucket size array
-  bucket_cost[new_position] = final_cost;
-  bucket_size_array[new_position] = final_size;
-  for (int i = new_position + 1; i < dynamic_bucket_size -1; i++) {
-    bucket_cost[i] = bucket_cost[i + 1];
-    bucket_size_array[i] = bucket_size_array[i + 1];
-  }
-}
 
 // number_of_buckets should be the length of lis_range
 // 256 34 20 1 0 - 4, 5
@@ -717,100 +684,7 @@ int main(int argc, char** argv) {
     }
 
   } else if (to_do_flag == 1) {
-    // merge by time only
-    vector <int> flagged_buckets;
-    while (dynamic_bucket_size > ideal) {
-      // initializing our variables for now
-      int smallest = -1;
-      int to_comp = number_of_nodes; // size of the smallest bucket
-      std::cout << dynamic_bucket_size << endl;
-      // now we will compute the smallest bucket
-      for (int i = 0; i < dynamic_bucket_size; i++) {
-        int s = bucket_size[i];
-        if ((s < to_comp) && (find(flagged_buckets.begin(), flagged_buckets.end(), i) == flagged_buckets.end())) {
-          smallest = i;
-          to_comp = s;
-        }
-      }
-
-      if (smallest == -1) {
-          // algorithm should terminate because no smallest bucket was found
-          break;
-      }
-
-      // at this point - comp = smallest bucket, and smallest = index of that bucket
-      // if the size of the smallest bucket == 0, then we should delete it
-      if (bucket_size[smallest] == 0) {
-        // do not care if it is the last bucket because there would not be anything in it anyway
-        // delete bucket index == smallest
-        int i = smallest;
-        for(int j = i; j < dynamic_bucket_size - 1; j++) {
-          kernel_name[j] = kernel_name[j +  1];
-          bucket_cost[j] = bucket_cost[j + 1];
-          bucket_size[j] = bucket_size[j + 1];
-        }
-        for(int j = i; j < dynamic_bucket_size; j++) {
-          bucket_range[j] = bucket_range[j + 1];
-        }
-
-        // assigning -1 to the deleted things
-        bucket_range[dynamic_bucket_size] = -1;
-        kernel_name[dynamic_bucket_size - 1] = "-1";
-        bucket_cost[dynamic_bucket_size - 1] = -1.0;
-        bucket_size[dynamic_bucket_size - 1] = -1;
-        // now we need to merge the array of vector
-        dynamic_bucket_size -=1;
-        continue; // to another iteration
-      }
-
-      // if the smallest bucket has size > 0, then we need to merge
-
-      float cost_smallest_buck = bucket_cost[smallest];
-      float cost_after_buck = -1.0; // initializing - cost of bucket previous to the smallest one
-      float cost_prev_buck = -1.0; // initializing - cost of bucket next to the smallest one
-
-      if (smallest != dynamic_bucket_size - 1) { // if the smallest bucket is not the last bucket
-        cost_after_buck = bucket_cost[smallest + 1];
-      }
-      if (smallest != 0) { // if the smallest bucket is not the next bucket
-        cost_prev_buck = bucket_cost[smallest - 1];
-      }
-
-      if ((cost_prev_buck != -1.0) && (cost_after_buck != -1.0)) { // if we are merging the middle bucket
-        if ((cost_prev_buck == cost_after_buck) && (cost_prev_buck == cost_smallest_buck)) { // merge all 3 together
-          merge_bucket(smallest - 1, smallest + 1, smallest - 1, dynamic_bucket_size, bucket_cost, bucket_range, bucket_size);
-        } else if ((cost_prev_buck <= cost_smallest_buck) && (cost_smallest_buck < cost_after_buck)) { // merge prev with smallest
-          merge_bucket(smallest - 1, smallest, smallest - 1, dynamic_bucket_size, bucket_cost, bucket_range, bucket_size);
-        } else if ((cost_prev_buck > cost_smallest_buck) && (cost_smallest_buck >= cost_after_buck)) { // merge after with smallest
-          merge_bucket(smallest, smallest + 1, smallest, dynamic_bucket_size, bucket_cost, bucket_range, bucket_size);
-        } else {
-          // int first, int second, int new_position, int *dynamic_bucket_size, int *bucket_cost, int *bucket_range, int *bucket_size_array
-          // nothing got merged
-          // flag the bucket so we do not get it again as the smallest bucket
-          std::cout << "did nothing" << endl;
-          flagged_buckets.push_back(smallest);
-        }
-      } else if ((cost_prev_buck != -1.0) && (cost_after_buck == -1.0)) { // end bucket to be merged
-        if (cost_prev_buck <= cost_smallest_buck) {
-          merge_bucket(smallest - 1, smallest, smallest - 1, dynamic_bucket_size, bucket_cost, bucket_range, bucket_size);
-        } else {
-          // nothing got merged
-          // flag the bucket so we do not get it again as the smallest bucket
-          std::cout << "did nothing" << endl;
-          flagged_buckets.push_back(smallest);
-
-        }
-      } else if ((cost_prev_buck == -1.0) && (cost_after_buck != -1.0)) { // first bucket is to be merged
-        if (cost_after_buck <= cost_smallest_buck) {
-          merge_bucket(smallest, smallest + 1, smallest, dynamic_bucket_size, bucket_cost, bucket_range, bucket_size);
-        } else {
-          // nothing got merged
-          // flag the bucket so we do not get it again as the smallest bucket
-          std::cout << "did nothing" << endl;
-          flagged_buckets.push_back(smallest);
-        }
-      }
-    }
+   
   }
 
   std::cout << "Bucket reduciton process is completed. Number of buckets now = " << dynamic_bucket_size << endl;
