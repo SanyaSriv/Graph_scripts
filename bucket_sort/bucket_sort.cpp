@@ -27,12 +27,12 @@ int FLOAT_MAX = 1;
 // [256, 34], [34, 20], [20, 1], [1, 0]
 //  0           1        2         3
 int bucket_decider(int degree, int *lis_range, int number_of_buckets) {
-   for(int i = 1; i < number_of_buckets; i++) {
-     if ((degree <= lis_range[i - 1]) && (degree > lis_range[i])) {
+   for(int i = 0; i < number_of_buckets; i++) {
+     if ((degree <= lis_range[i]) && (degree > lis_range[i + 1])) {
        return i;
      } else if (degree == 0) {
        //return number_of_buckets - 1; // will put this in the last bucket
-       return number_of_buckets; // will put this in the last bucket
+       return number_of_buckets - 1; // will put this in the last bucket
      }
    }
    return 1;
@@ -141,12 +141,75 @@ void schedule_printer_cost(int dynamic_bucket_size, string kernel_name[], float 
   cout << endl;
 }
 
+void make_graph(int bucket_number, int number_of_nodes, int number_of_edges, 
+                int *dictionary_for_sorting, int bucket_range[], int dynamic_bucket_size, 
+                vector<int> *dictionary_degree) {
+  fstream my_file;
+  string to_read;
+  int num;
+  std::cout << "skghdkg" << dynamic_bucket_size << endl;
+  std::cout << "opening the b graph file" << endl;
+  my_file.open("b_graph_file.txt");
+  vector<int> *graph_bucket_list_nodes = new vector<int>[dynamic_bucket_size];
+  while(getline(my_file, to_read)) {
+    num = stoi(to_read);
+    int u = bucket_decider(dictionary_for_sorting[num], bucket_range, dynamic_bucket_size);
+    // std::cout << u << endl;
+    graph_bucket_list_nodes[u].push_back(num);
+  }
+  my_file.close();
+  std::cout << "Reached in 158" << endl;
+  string header_file = "header_" + to_string(bucket_number) + ".txt";
+  string index_file = "index_" + to_string(bucket_number) + ".txt";
+  string neighbour_file = "neighbour_" + to_string(bucket_number) + ".txt";
+
+  ofstream outfile0 (header_file); // will contain number_of_nodes, and number_of_edges
+  ofstream outfile1 (index_file);
+  ofstream outfile2 (neighbour_file);
+
+  unordered_map <int, int> dic_translate;
+  unordered_map <int, int> dic_translate_reverse;
+  // we are renumbering the nodes so node 0 is at the beginning
+  int k = 0;
+  for(int x = 0; x < dynamic_bucket_size; x++) {
+    for (int j = 0; j < graph_bucket_list_nodes[x].size(); j++) {
+      dic_translate[graph_bucket_list_nodes[x][j]] = k;
+      dic_translate_reverse[k] = graph_bucket_list_nodes[x][j];
+      k += 1;
+    }
+  }
+
+// filling in the header.txt file
+outfile0 << number_of_nodes << endl;
+outfile0 << number_of_edges << endl;
+
+int neigh_start = 0;
+int count = 0;
+
+for (int i = 0; i < number_of_nodes; i++) {
+  outfile1 << neigh_start << endl;
+  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
+    neigh_start += 1;
+  }
+}
+outfile1 << neigh_start << endl;
+
+for (int i = 0; i < number_of_nodes; i++) {
+  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
+    outfile2 << dic_translate[dictionary_degree[dic_translate_reverse[i]][j]] << endl;
+  }
+}
+  outfile1.close();
+  outfile2.close();
+}
+
+
 map <string, vector <float> > benchmark_data_map;
 
 int main(int argc, char** argv) {
   srand(time(nullptr));
   int number_of_edges, number_of_nodes;
-  vector <int> bucket_sizes_requested;
+  unordered_map <int, int> bucket_sizes_requested;
 
   std::cout << "The flag given was:" << argv[1] << endl;
   std::cout << "The unweighted graph entered is: " << argv[2] << endl;
@@ -158,7 +221,7 @@ int main(int argc, char** argv) {
 
   // buckets we want should be from argv[8] to the rest of the number
   for (int i = 8; i < argc; i++) {
-    bucket_sizes_requested.push_back(stoi(argv[i]));
+    bucket_sizes_requested[stoi(argv[i])] = 1;
     std::cout << "Bucket size needed: " << argv[i] << endl;
   }
 
@@ -203,11 +266,6 @@ int main(int argc, char** argv) {
   // as sson as we reach one of these values -> it should trigger bucket creation. 
   // so we might need to make a bucket creation function. It should  not be a part of main? 
   // when it does so, it should also create something for the sssp.cuh generator. 
-
-  int intermediate_representation = 0; // we are processing the entire graph at once
-  if ((int)(size_t)argv[4] == 1) {
-    intermediate_representation = 1;
-  }
 
   int to_do_flag = stoi(argv[1]);
   fstream my_file;
@@ -266,7 +324,6 @@ int main(int argc, char** argv) {
   int insert = 0;
   int end = 0;
   bool insert_falg = false;
-  ssize_t getline_lable;
 
   int *encrpytion_array = new int[number_of_nodes];
   vector<int> *dictionary_degree = new vector<int>[number_of_nodes]; // array of vectors
@@ -312,8 +369,6 @@ int main(int argc, char** argv) {
   std::cout << "Graph read and variables populated: Success" << endl; // working till here - checked on Toucan
   b_graph_set.clear();
 
-  std::cout << "Bucketing process starting: Success" << endl;
-
   // should print out an initial schedule here before starting
   std::cout << "Printing out the initial schedule here -> " << endl;
   schedule_printer(number_of_buckets, kernel_name, bucket_range);
@@ -328,10 +383,17 @@ int main(int argc, char** argv) {
   int num;
 
   my_file.close();
-  std::cout << "Buckets created + populated: Success." << endl;
   std::cout << "Reduction Process beginning: Success." << endl;
   std::cout <<"Current bucket size = " << dynamic_bucket_size << endl; // works till here - Success seen on Toucan
-
+  if (bucket_sizes_requested.find(dynamic_bucket_size) != bucket_sizes_requested.end()) {
+    // we need a graph with this bucket size
+    std::cout << "Printing out a graph with the bucket size = " << dynamic_bucket_size << endl;
+    make_graph(dynamic_bucket_size, number_of_nodes, number_of_edges, 
+              dictionary_for_sorting, bucket_range, 
+              dynamic_bucket_size, dictionary_degree);
+    std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
+    bucket_sizes_requested.erase(dynamic_bucket_size);
+  }
 // 200 180 140 50 70 80 0
   int ideal = 6;
   int ideal_for_name_merge = 1;
@@ -362,11 +424,19 @@ int main(int argc, char** argv) {
           change_made = 1;
           dynamic_bucket_size -=1;
         }
+        if (bucket_sizes_requested.find(dynamic_bucket_size) != bucket_sizes_requested.end()) {
+          // we need a graph with this bucket size
+          std::cout << "Printing out a graph with the bucket size = " << dynamic_bucket_size << endl;
+          make_graph(dynamic_bucket_size, number_of_nodes, number_of_edges, 
+                    dictionary_for_sorting, bucket_range, 
+                    dynamic_bucket_size, dictionary_degree);
+          std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
+          bucket_sizes_requested.erase(dynamic_bucket_size);
+        }
       }
-
       std::cout << "Iteration completed" << endl;
-
       if (change_made == 0) {
+        std::cout << "No change made: Stopping the merge by name process here." << endl;
         break;
       }
       schedule_printer(dynamic_bucket_size, kernel_name, bucket_range);
@@ -403,6 +473,15 @@ int main(int argc, char** argv) {
           // now we need to merge the array of vector
           change_made = 1;
           dynamic_bucket_size -=1;
+        }
+        if (bucket_sizes_requested.find(dynamic_bucket_size) != bucket_sizes_requested.end()) {
+          // we need a graph with this bucket size
+          std::cout << "Printing out a graph with the bucket size = " << dynamic_bucket_size << endl;
+          make_graph(dynamic_bucket_size, number_of_nodes, number_of_edges, 
+                    dictionary_for_sorting, bucket_range, 
+                    dynamic_bucket_size, dictionary_degree);
+          std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
+          bucket_sizes_requested.erase(dynamic_bucket_size);
         }
       }
 
@@ -548,67 +627,20 @@ int main(int argc, char** argv) {
       }
       std::cout << "Printing out the schedule -> " << endl;
       schedule_printer_cost(dynamic_bucket_size, kernel_name, bucket_cost, bucket_range);
+      if (bucket_sizes_requested.find(dynamic_bucket_size) != bucket_sizes_requested.end()) {
+          // we need a graph with this bucket size
+          std::cout << "Printing out a graph with the bucket size = " << dynamic_bucket_size << endl;
+          make_graph(dynamic_bucket_size, number_of_nodes, number_of_edges, 
+                    dictionary_for_sorting, bucket_range, 
+                    dynamic_bucket_size, dictionary_degree);
+          std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
+          bucket_sizes_requested.erase(dynamic_bucket_size);
+        }
     }
-  } else if (to_do_flag == 1) {
-   
   }
 
   std::cout << "Bucket reduciton process is completed. Number of buckets now = " << dynamic_bucket_size << endl;
-
-  std::cout << "opening the b graph file" << endl;
-  my_file.open("b_graph_file.txt");
-  while(getline(my_file, to_read)) {
-    num = stoi(to_read);
-    graph_bucket_list_nodes[bucket_decider(dictionary_for_sorting[num], bucket_range, dynamic_bucket_size + 1) - 1].push_back(num);
-  }
-  my_file.close();
-
-  // have to check if it is working till here
-  // commenting out the python tail code for now - will check it later
-  // TODO (SanyaSriv): Check if this works 
-  
-  // now we will create 2 files -
-  ofstream outfile0 ("header.txt"); // will contain number_of_nodes, and number_of_edges
-  ofstream outfile1 ("index_array.txt");
-  ofstream outfile2 ("neighbour_array.txt");
-  ofstream outfile3 ("weights_array.txt");
-  unordered_map <int, int> dic_translate;
-  unordered_map <int, int> dic_translate_reverse;
-  // we are renumbering the nodes so node 0 is at the beginning
-  int k = 0;
-  for(int x = 0; x < dynamic_bucket_size; x++) {
-    for (int j = 0; j < graph_bucket_list_nodes[x].size(); j++) {
-      dic_translate[graph_bucket_list_nodes[x][j]] = k;
-      dic_translate_reverse[k] = graph_bucket_list_nodes[x][j];
-      k += 1;
-    }
-  }
-
-// filling in the header.txt file
-outfile0 << number_of_nodes << endl;
-outfile0 << number_of_edges << endl;
-
-int neigh_start = 0;
-int count = 0;
-
-for (int i = 0; i < number_of_nodes; i++) {
-  outfile1 << neigh_start << endl;
-  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
-    neigh_start += 1;
-  }
-}
-outfile1 << neigh_start << endl;
-
-for (int i = 0; i < number_of_nodes; i++) {
-  for (int j = 0; j < dictionary_degree[dic_translate_reverse[i]].size(); j ++) {
-    outfile2 << dic_translate[dictionary_degree[dic_translate_reverse[i]][j]] << endl;
-    float weight = FLOAT_MIN + (float)(rand()) / ((float)(RAND_MAX/(FLOAT_MAX - FLOAT_MIN)));
-    outfile3 << weight << endl;
-  }
-}
-  outfile1.close();
-  outfile2.close();
-  outfile3.close();
+  // now filling in the nodes in the buckets. 
   
   return 0;
 }
