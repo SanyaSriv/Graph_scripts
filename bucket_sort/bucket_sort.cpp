@@ -16,16 +16,6 @@ using namespace std;
 
 // we can assume that it will use the Gorder file only 
 // so the minimum node = 0 and not 1
-// global variables declared here
-// bucket delete -> modify -> could buckets be stored on disk?
-// codes -
-// 1 -> O E O
-// 2 -> E O O
-// 3 -> O O E
-
-// go through name merge
-// then choose minimum bucket
-// see if minimum bucket if merged with left neighbour can give us better results; similar with right
 
 int FLOAT_MIN = 0;
 int FLOAT_MAX = 1;
@@ -48,52 +38,110 @@ int bucket_decider(int degree, int *lis_range, int number_of_buckets) {
    return 1;
 }
 
+void schedule_printer(int number_of_buckets, string kernel_name[], int bucket_range[]) {
+  // TODO (SanyaSriv): Fill in this code.
+   for(int indi = 0; indi < 6; indi ++) {
+    std::cout << "----------";
+  }
+  std::cout << endl;
+  int mid_size = 30;
+  string header_string = "Bucket name + range";
+  std::cout << "Bucket name + range";
+  int temp_space = mid_size - header_string.size();
+  for(int indi = 0; indi < temp_space; indi ++) {
+    cout << " ";
+  }
+  cout << "|";
+  std::cout << "     Kernel Name" << endl;
+  // std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
+  
+  for(int i = 0; i < number_of_buckets; i++) {
+    for(int indi = 0; indi < 6; indi ++) {
+      std::cout << "----------";
+    }
+    std::cout << endl;
+    string bucket = "Bucket" + to_string(i);
+    int temp_space_var = mid_size - bucket.length();
+    std::cout << bucket;
+    for(int indi = 0; indi < temp_space_var; indi ++) {
+      cout << " ";
+    }
+    cout << "|     ";
+    cout << kernel_name[i] << endl;
+    bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
+    temp_space_var = mid_size - bucket.length();
+    std::cout << bucket;
+    for(int indi = 0; indi < temp_space_var; indi ++) {
+      cout << " ";
+    }
+    cout << "|     " <<  endl;
+  }
+  cout << endl; 
+}
+
 map <string, vector <float> > benchmark_data_map;
 
 int main(int argc, char** argv) {
   srand(time(nullptr));
+  int number_of_edges, number_of_nodes;
+  vector <int> bucket_sizes_requested;
+
   std::cout << "The flag given was:" << argv[1] << endl;
   std::cout << "The unweighted graph entered is: " << argv[2] << endl;
   std::cout << "File to extract bucket data is: " << argv[3] << endl;
   std::cout << "Intermediate_representation: " << argv[4] << endl;
+  std::cout << "Benchmark_data_file: " << argv[5] << endl;
+  std::cout << "Number of nodes are: " << argv[6] << endl;
+  std::cout << "Number of edges are: " << argv[7] << endl;
 
-  if (argc > 5) {
-    std::cout << "Benchmark_data_file: " << argv[5] << endl;
-    fstream benchmark_file;
-    benchmark_file.open(argv[5], ios::in);
-    string line_read;
-    getline(benchmark_file, line_read);
-    int number_of_kernels;
-    int number_of_segments;
-    number_of_kernels = stoi(line_read);
-    getline(benchmark_file, line_read);
-    number_of_segments = stoi(line_read);
-    for(int i = 0; i < number_of_kernels; i++) {
-      getline(benchmark_file, line_read);
-      string kernel = line_read;
-      vector<float> empty_vector;
-      benchmark_data_map[line_read] = empty_vector;
-      for(int j = 0; j < number_of_segments; j++) {
-        getline(benchmark_file, line_read);
-        benchmark_data_map[kernel].push_back(stof(line_read));
-      }
-    }
-  
-    // testing if we are printing out the map correctly: 
-    for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
-      cout << it->first << " : ";
-      for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
-        cout << *it2 << " ";
-      }
-      cout << endl << endl;
-    }
-    // Everything is getting stored correctly
+  // buckets we want should be from argv[8] to the rest of the number
+  for (int i = 8; i < argc; i++) {
+    bucket_sizes_requested.push_back(stoi(argv[i]));
+    std::cout << "Bucket size needed: " << argv[i] << endl;
   }
 
-  int number_of_edges, number_of_nodes;
-  number_of_nodes = int(argv[6]);
-  number_of_edges = int(argv[7]);
+  // filling in number of nodes and edges
+  number_of_nodes = stoi(argv[6]);
+  number_of_edges = stoi(argv[7]);
+
+  // doing the benchmark data filling
+  fstream benchmark_file;
+  benchmark_file.open(argv[5], ios::in);
+  string line_read;
+  getline(benchmark_file, line_read);
+  int number_of_kernels;
+  int number_of_segments;
+  number_of_kernels = stoi(line_read);
+  getline(benchmark_file, line_read);
+  number_of_segments = stoi(line_read);
+  for(int i = 0; i < number_of_kernels; i++) {
+    getline(benchmark_file, line_read);
+    string kernel = line_read;
+    vector<float> empty_vector;
+    benchmark_data_map[line_read] = empty_vector;
+    for(int j = 0; j < number_of_segments; j++) {
+      getline(benchmark_file, line_read);
+      benchmark_data_map[kernel].push_back(stof(line_read));
+    }
+  }
+
+  // testing if we are printing out the map correctly: 
+  for(auto it = benchmark_data_map.begin(); it != benchmark_data_map.end(); ++it) {
+    cout << it->first << " : ";
+    for(auto it2 = it->second.begin(); it2 != it->second.end(); ++it2) {
+      cout << *it2 << " ";
+    }
+    cout << endl << endl;
+  }
+  // benchmark data filled
+
+  // Everything is getting stored correctly
   
+  // what we could do is: from argv[8] and onwrds, consider everthing as the number of buckets we need.
+  // as sson as we reach one of these values -> it should trigger bucket creation. 
+  // so we might need to make a bucket creation function. It should  not be a part of main? 
+  // when it does so, it should also create something for the sssp.cuh generator. 
+
   int intermediate_representation = 0; // we are processing the entire graph at once
   if ((int)(size_t)argv[4] == 1) {
     intermediate_representation = 1;
@@ -163,12 +211,6 @@ int main(int argc, char** argv) {
   int *dictionary_for_sorting = new int[number_of_nodes] (); // initialize to all zeros
   std::cout << "Array set up done" << endl;
 
-  int prev_node = 0;
-  int on_node = 0;
-
-  //int *b_graph{new int[number_of_nodes]}; // could be stored as a file
-  std::cout << "map set up" << endl;
-
   // to store the order of the graph
   ofstream outfile ("b_graph_file.txt");
   unordered_map<int, bool> b_graph_set;
@@ -212,47 +254,8 @@ int main(int argc, char** argv) {
 
   // should print out an initial schedule here before starting
   std::cout << "Printing out the initial schedule here -> " << endl;
-  // technically, we should be calling a function here but for now, I am writing the code in the main
-  for(int indi = 0; indi < 6; indi ++) {
-    std::cout << "----------";
-  }
-  std::cout << endl;
-  int mid_size = 30;
-  string header_string = "Bucket name + range";
-  std::cout << "Bucket name + range";
-  int temp_space = mid_size - header_string.size();
-  for(int indi = 0; indi < temp_space; indi ++) {
-    cout << " ";
-  }
-  cout << "|";
-  std::cout << "     Kernel Name" << endl;
-  // std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
-  
-  for(int i = 0; i < number_of_buckets; i++) {
-    for(int indi = 0; indi < 6; indi ++) {
-      std::cout << "----------";
-    }
-    std::cout << endl;
-    string bucket = "Bucket" + to_string(i);
-    int temp_space_var = mid_size - bucket.length();
-    std::cout << bucket;
-    for(int indi = 0; indi < temp_space_var; indi ++) {
-      cout << " ";
-    }
-    cout << "|     ";
-    cout << kernel_name[i] << endl;
-    bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
-    temp_space_var = mid_size - bucket.length();
-    std::cout << bucket;
-    for(int indi = 0; indi < temp_space_var; indi ++) {
-      cout << " ";
-    }
-    cout << "|     " <<  endl;
-  }
-  cout << endl;
-
-  // code for printing out the buckets ends here
-
+  schedule_printer(number_of_buckets, kernel_name, bucket_range);
+ 
   vector<int> *graph_bucket_list_nodes = new vector<int>[number_of_buckets];
   int dynamic_bucket_size = number_of_buckets;
   int *bucket_size = new int[number_of_buckets]; // size of each bucket
@@ -261,15 +264,7 @@ int main(int argc, char** argv) {
   // now we would have to open the b_graph file for reading
   my_file.open("b_graph_file.txt");
   int num;
-  // while(getline(my_file, to_read)) {
-  //   num = stoi(to_read);
-  //   if (num == 2826033) { // this is just for debugging purpose
-  //     std::cout << "deg = " << dictionary_for_sorting[num] << endl;
-  //     std:cout << "result = " << bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1;
-  //   } // int degree, int *lis_range, int number_of_buckets
-  //   graph_bucket_list_nodes[bucket_decider(dictionary_for_sorting[num], bucket_range, number_of_buckets + 1) - 1].push_back(num);
-  //   //int degree, int lis_range[], int number_of_buckets
-  // }
+
   my_file.close();
   std::cout << "Buckets created + populated: Success." << endl;
   std::cout << "Reduction Process beginning: Success." << endl;
@@ -317,48 +312,7 @@ int main(int argc, char** argv) {
       if (change_made == 0) {
         break;
       }
-
-      // if a change was made then we will print out the schedule
-      std::cout << "Printing out the schedule -> " << endl;
-      // technically, we should be calling a function here but for now, I am writing the code in the main
-      for(int indi = 0; indi < 6; indi ++) {
-        std::cout << "----------";
-      }
-      std::cout << endl;
-      int mid_size = 30;
-      string header_string = "Bucket name + range";
-      std::cout << "Bucket name + range";
-      int temp_space = mid_size - header_string.size();
-      for(int indi = 0; indi < temp_space; indi ++) {
-        cout << " ";
-      }
-      cout << "|";
-      std::cout << "     Kernel Name" << endl;
-      // std::cout << "Bucket name + range" << "      |     Kernel Name" << endl;
-      
-      for(int i = 0; i < dynamic_bucket_size; i++) {
-        for(int indi = 0; indi < 6; indi ++) {
-          std::cout << "----------";
-        }
-        std::cout << endl;
-        string bucket = "Bucket" + to_string(i);
-        int temp_space_var = mid_size - bucket.length();
-        std::cout << bucket;
-        for(int indi = 0; indi < temp_space_var; indi ++) {
-          cout << " ";
-        }
-        cout << "|     ";
-        cout << kernel_name[i] << endl;
-        bucket = to_string(bucket_range[i]) + " - " + to_string(bucket_range[i + 1]);
-        temp_space_var = mid_size - bucket.length();
-        std::cout << bucket;
-        for(int indi = 0; indi < temp_space_var; indi ++) {
-          cout << " ";
-        }
-        cout << "|     " <<  endl;
-      }
-      cout << endl;
-      // printing ends here
+      schedule_printer(dynamic_bucket_size, kernel_name, bucket_range);
     }
     // merge by just the name
   } else if (to_do_flag == 2) {
