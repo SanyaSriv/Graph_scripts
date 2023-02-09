@@ -1,43 +1,41 @@
 import pdb
 import random
 import struct
+import sys
 
-inp = "out.orkut"
-fname = inp.split(".")
-weights = open("weights_array.txt", "r")
-index   = open("index_array.txt", "r")
-neighbours = open("neighbour_array.txt", "r")
-param0 = index.readline().split()
-param1 = neighbours.readline().split()
-param2 = weights.readline().split()
-index_array = []
-neighbour_array = []
-y = 0
-p = 0
-while True:
-    if param0 == []: # we ahve reached at the end of the file
-        break
-    index_array.append(int(param0[0]))
-    param0 = index.readline().split()
-    p += 1
+header_file = sys.argv[2]
+index_file = sys.argv[3]
+neighbour_file = sys.argv[4]
+output_file_name = sys.argv[5]
+
+f = open(output_file_name, "wb")
+f_header = open(header_file, "r")
+f_index = open(index_file, "r")
+f_neighbour = open(neighbour_file, "r")
+
+number_of_nodes = int(f_header.readline().split()[0])
+number_of_edges = int(f_header.readline().split()[0])
+
+f.write((number_of_nodes).to_bytes(4, byteorder='little'))
+f.write((number_of_edges).to_bytes(8, byteorder = 'little'))
 
 while True:
-    if param1 == []:
+    line = f_index.readline().split()
+    if line == []:
         break
-    neighbour_array.append([int(param1[0]), float(param2[0])])
-    param1 = neighbours.readline().split()
-    param2 = weights.readline().split()
-    y += 1
-print("these maney lines read = ", y, p)
+    to_write = int(line[0])
+    f.write((to_write).to_bytes(8, byteorder = 'little'))
 
-with open("{}_Bucket_1b.wsg".format(fname[len(fname)- 1]), "wb") as f:
-    f.write((len(index_array) - 1).to_bytes(4, byteorder = 'little'))
-    f.write((len(neighbour_array)).to_bytes(8, byteorder = 'little'))
-    for i in index_array:
-        f.write((i).to_bytes(8, byteorder = 'little'))
-    for i in neighbour_array:
-        f.write((i[0]).to_bytes(4, byteorder = 'little'))
-        f.write(struct.pack('<f', i[1]))
-weights.close()
-index.close()
-neighbours.close()
+while True:
+    line = f_neighbour.readline().split()
+    if line == []:
+        break
+    to_write = int(line[0])
+    f.write((to_write).to_bytes(4, byteorder = 'little'))
+    random_number = random.random()
+    f.write(struct.pack('<f', random_number))
+
+f.close()
+f_header.close()
+f_index.close()
+f_neighbour.close()
