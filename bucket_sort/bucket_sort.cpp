@@ -331,10 +331,8 @@ int main(int argc, char** argv) {
     }
     // merge by just the name
   } else if (to_do_flag == 2) {
-    // TODO (SanyaSriv): merge by both time and name
-
     // merging by name first
-        while (dynamic_bucket_size > ideal_for_name_merge) {
+    while (dynamic_bucket_size > ideal_for_name_merge) {
       int change_made = 0;
       for(int i = 0; i < dynamic_bucket_size - 1; i++) {
         // std::cout << kernel_name[i] << " " << kernel_name[i + 1] << endl; -> debugging statement
@@ -523,7 +521,42 @@ int main(int argc, char** argv) {
                     dynamic_bucket_size, dictionary_degree);
           std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
           bucket_sizes_requested.erase(dynamic_bucket_size);
+      }
+
+      // doing a name merge again.
+      for(int i = 0; i < dynamic_bucket_size - 1; i++) {
+        // std::cout << kernel_name[i] << " " << kernel_name[i + 1] << endl; -> debugging statement
+        if (kernel_name[i] == kernel_name[i + 1]) {
+          //merge_bucket(i, i + 1);
+          for(int j = i+1; j < dynamic_bucket_size - 1; j++) {
+            kernel_name[j] = kernel_name[j +  1];
+          }
+          // merging the range
+          for(int j = i+1; j < dynamic_bucket_size; j++) {
+            bucket_range[j] = bucket_range[j + 1];
+          }
+          // merging the cost
+          bucket_cost[i] = bucket_cost[i] + bucket_cost[i + 1];
+          for(int j = i + 1; j < dynamic_bucket_size; j++) {
+            bucket_cost[j] = bucket_cost[j + 1];
+          }
+
+          bucket_range[dynamic_bucket_size] = -1;
+          kernel_name[dynamic_bucket_size - 1] = "-1";
+          bucket_cost[dynamic_bucket_size - 1] = -1;
+          // now we need to merge the array of vector
+          dynamic_bucket_size -=1;
         }
+        if (bucket_sizes_requested.find(dynamic_bucket_size) != bucket_sizes_requested.end()) {
+          // we need a graph with this bucket size
+          std::cout << "Printing out a graph with the bucket size = " << dynamic_bucket_size << endl;
+          make_graph(dynamic_bucket_size, number_of_nodes, number_of_edges, 
+                    dictionary_for_sorting, bucket_range, 
+                    dynamic_bucket_size, dictionary_degree);
+          std::cout << "Printing the graph for bucket size = " << dynamic_bucket_size << " Completed" << endl;
+          bucket_sizes_requested.erase(dynamic_bucket_size);
+        }
+      }
     }
   }
 
@@ -533,22 +566,4 @@ int main(int argc, char** argv) {
   return 0;
 }
 
-// old method below: 
-
-  // string st;
-  // int neighbour_array_size = 0;
-  // for (int i = 0; i < dynamic_bucket_size; i++) {
-  //   for (int j = 0; j < graph_bucket_list_nodes[i].size(); j++) {
-  //     outfile1 << to_string(neighbour_array_size) << endl;
-  //     for (auto&k : dictionary_degree[graph_bucket_list_nodes[i][j]]) { // k are the neighbours of j
-  //       // TODO (SanyaSriv): The line below should be to_string(graph_bucket_list_nodes[i][j])
-  //       st = to_string(j) + "-" + to_string(k) + "-";
-  //       float to_insert = weight_dictionary[st];
-  //       outfile2 << to_string(dic_translate[k]) << endl;
-  //       outfile3 << to_string(to_insert) << endl;
-  //       neighbour_array_size += 1;
-  //     }
-  //   }
-  // }
-  // outfile1 << to_string(neighbour_array_size) << endl;
 
